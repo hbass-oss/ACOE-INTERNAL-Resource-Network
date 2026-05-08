@@ -1075,7 +1075,7 @@ function saveContact() {
   closeModal();
   // Re-render if on results step
   if (currentStep === 3) renderResults();
-  renderAdminEditor();
+  buildAdminCards();
   toast('Contact saved for ' + (r ? r.name : editingId));
   // Return to admin directory if triggered from there
   if (_pendingAdminReturn) { _pendingAdminReturn = false; openAdminDirectory(); }
@@ -1093,14 +1093,13 @@ document.getElementById('edit-modal').addEventListener('click', function(e) {
 //  ADMIN TAB — full inline editor
 // ═══════════════════════════════════════════
 function openAdminDirectory() {
-  // Show admin tab as a step overlay
   document.getElementById('admin-tab').style.display = 'block';
   document.getElementById('step1').style.display = 'none';
   document.getElementById('step2').style.display = 'none';
   document.getElementById('step3').style.display = 'none';
   document.getElementById('step4').style.display = 'none';
   document.getElementById('step-confirm').style.display = 'none';
-  renderAdminEditor();
+  buildAdminCards();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1109,139 +1108,203 @@ function closeAdminTab() {
   goStep(currentStep || 1);
 }
 
-function renderAdminEditor() {
-  const contacts = loadContacts();
-  const filledCount = RESOURCES.filter(r => {
-    const c = contacts[r.id]||{};
-    return c.poc||c.email||c.phone;
+// Build admin cards using DOM — no template literals, no escaping issues
+function buildAdminCards() {
+  var contacts = loadContacts();
+  var body = document.getElementById('admin-editor-body');
+  var prog = document.getElementById('admin-progress');
+  if (!body) { console.error('admin-editor-body not found'); return; }
+
+  // Count filled
+  var filledCount = RESOURCES.filter(function(r) {
+    var c = contacts[r.id] || {};
+    return c.poc || c.email || c.phone;
   }).length;
-  const prog = document.getElementById('admin-progress');
+
+  // Progress bar
   if (prog) {
-    const pct = Math.round(filledCount/RESOURCES.length*100);
-    prog.innerHTML = `
-      <div style="flex:1">
-        <div style="font-weight:600;color:var(--ink);margin-bottom:.3rem">${filledCount} of ${RESOURCES.length} resources have contact info</div>
-        <div style="background:var(--border);border-radius:var(--pill);height:6px;overflow:hidden">
-          <div style="background:var(--teal);height:100%;width:${pct}%;border-radius:var(--pill);transition:width .3s"></div>
-        </div>
-      </div>
-      <div style="font-size:.72rem;color:var(--ink4)">${pct}% complete</div>`;
+    var pct = Math.round(filledCount / RESOURCES.length * 100);
+    prog.innerHTML = '';
+    var pLeft = document.createElement('div');
+    pLeft.style.cssText = 'flex:1';
+    pLeft.innerHTML = '<div style="font-weight:600;color:var(--ink);margin-bottom:.3rem">' +
+      filledCount + ' of ' + RESOURCES.length + ' resources have contact info</div>' +
+      '<div style="background:var(--border);border-radius:var(--pill);height:6px;overflow:hidden">' +
+      '<div style="background:var(--teal);height:100%;width:' + pct + '%;border-radius:var(--pill);transition:width .3s"></div></div>';
+    var pRight = document.createElement('div');
+    pRight.style.cssText = 'font-size:.72rem;color:var(--ink4)';
+    pRight.textContent = pct + '% complete';
+    prog.appendChild(pLeft);
+    prog.appendChild(pRight);
   }
-  const wrap = document.getElementById('admin-editor-body');
-  if (!wrap) return;
-  wrap.innerHTML = RESOURCES.map(r => {
-    const c = { poc:'', phone:'', email:'', howto:'', ...(contacts[r.id] || {}) };
-    const hasContact = !!(c.poc || c.email || c.phone);
-    return `
-    <div class="admin-res-card" id="arc-${r.id}">
-      <div class="arc-header" onclick="toggleArc('${r.id}')">
-        <div style="display:flex;align-items:center;gap:.65rem;flex:1;min-width:0">
-          <div style="width:34px;height:34px;background:${r.iconBg};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">${r.icon}</div>
-          <div style="min-width:0">
-            <div style="font-weight:700;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-            <div style="font-size:.73rem;color:${hasContact?'var(--green)':'var(--ink4)'}">
-              ${hasContact ? '✓ ' + (c.poc||c.email) : 'No contact info yet — click to add'}
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
-          <div class="arc-status ${hasContact?'filled':''}">${hasContact?'Set':'Empty'}</div>
-          <div class="arc-chev" id="arc-chev-${r.id}">▼</div>
-        </div>
-      </div>
-      <div class="arc-body" id="arc-body-${r.id}" style="display:none">
-        <div class="arc-fields">
-          <div class="arc-field">
-            <label>Point of Contact Name</label>
-            <input id="acp-${r.id}" value="${esc(c.poc)}" placeholder="e.g. Maria Gonzalez, Literacy Specialist Lead">
-          </div>
-          <div class="arc-field">
-            <label>Phone</label>
-            <input id="acph-${r.id}" value="${esc(c.phone)}" placeholder="e.g. (510) 670-4590 ext. 1234">
-          </div>
-          <div class="arc-field">
-            <label>Email</label>
-            <input type="email" id="acem-${r.id}" value="${esc(c.email)}" placeholder="e.g. mgonzalez@acoe.org">
-          </div>
-          <div class="arc-field arc-field-full">
-            <label>Referral Process — how does a staff member access this resource?</label>
-            <textarea id="acht-${r.id}" placeholder="e.g. Contact your site principal and request a referral. Specialist availability is confirmed within 3 days. No separate form required.">${esc(c.howto)}</textarea>
-          </div>
-        </div>
-        <div style="display:flex;gap:.5rem;padding:0 1rem .85rem;justify-content:flex-end">
-          <button class="arc-clear" onclick="clearResource('${r.id}')">Clear</button>
-          <button class="arc-save" onclick="saveResource('${r.id}')">Save →</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+
+  // Clear and rebuild cards
+  body.innerHTML = '';
+
+  RESOURCES.forEach(function(r) {
+    var saved = contacts[r.id] || {};
+    var poc   = saved.poc   || '';
+    var phone = saved.phone || '';
+    var email = saved.email || '';
+    var howto = saved.howto || '';
+    var hasContact = !!(poc || email || phone);
+
+    // Outer card
+    var card = document.createElement('div');
+    card.className = 'admin-res-card';
+    card.id = 'arc-' + r.id;
+
+    // Header row
+    var hdr = document.createElement('div');
+    hdr.className = 'arc-header';
+    hdr.onclick = function() { toggleArc(r.id); };
+
+    // Icon
+    var iconWrap = document.createElement('div');
+    iconWrap.style.cssText = 'width:34px;height:34px;background:' + r.iconBg + ';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0';
+    iconWrap.textContent = r.icon;
+
+    // Name + subtitle
+    var nameWrap = document.createElement('div');
+    nameWrap.style.cssText = 'min-width:0';
+    var nameDiv = document.createElement('div');
+    nameDiv.style.cssText = 'font-weight:700;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    nameDiv.textContent = r.name;
+    var subDiv = document.createElement('div');
+    subDiv.style.cssText = 'font-size:.73rem;color:' + (hasContact ? 'var(--green)' : 'var(--ink4)');
+    subDiv.textContent = hasContact ? ('✓ ' + (poc || email)) : 'No contact info yet — click to add';
+    nameWrap.appendChild(nameDiv);
+    nameWrap.appendChild(subDiv);
+
+    // Left side of header
+    var hdrLeft = document.createElement('div');
+    hdrLeft.style.cssText = 'display:flex;align-items:center;gap:.65rem;flex:1;min-width:0';
+    hdrLeft.appendChild(iconWrap);
+    hdrLeft.appendChild(nameWrap);
+
+    // Status badge + chevron
+    var badge = document.createElement('div');
+    badge.className = 'arc-status' + (hasContact ? ' filled' : '');
+    badge.id = 'arc-badge-' + r.id;
+    badge.textContent = hasContact ? 'Set' : 'Empty';
+
+    var chev = document.createElement('div');
+    chev.className = 'arc-chev';
+    chev.id = 'arc-chev-' + r.id;
+    chev.textContent = '▼';
+
+    var hdrRight = document.createElement('div');
+    hdrRight.style.cssText = 'display:flex;align-items:center;gap:.5rem;flex-shrink:0';
+    hdrRight.appendChild(badge);
+    hdrRight.appendChild(chev);
+
+    hdr.appendChild(hdrLeft);
+    hdr.appendChild(hdrRight);
+
+    // Expandable body
+    var arcBody = document.createElement('div');
+    arcBody.className = 'arc-body';
+    arcBody.id = 'arc-body-' + r.id;
+    arcBody.style.display = 'none';
+
+    // Fields grid
+    var fields = document.createElement('div');
+    fields.className = 'arc-fields';
+
+    function makeField(label, inputId, type, val, placeholder, fullWidth) {
+      var wrap = document.createElement('div');
+      wrap.className = 'arc-field' + (fullWidth ? ' arc-field-full' : '');
+      var lbl = document.createElement('label');
+      lbl.textContent = label;
+      var inp;
+      if (type === 'textarea') {
+        inp = document.createElement('textarea');
+        inp.textContent = val;
+      } else {
+        inp = document.createElement('input');
+        inp.type = type;
+        inp.value = val;
+      }
+      inp.id = inputId;
+      inp.placeholder = placeholder;
+      wrap.appendChild(lbl);
+      wrap.appendChild(inp);
+      return wrap;
+    }
+
+    fields.appendChild(makeField('Point of Contact Name',       'acp-'+r.id,  'text',     poc,   'e.g. Maria Gonzalez', false));
+    fields.appendChild(makeField('Phone',                        'acph-'+r.id, 'tel',      phone, 'e.g. (510) 670-4590', false));
+    fields.appendChild(makeField('Email',                        'acem-'+r.id, 'email',    email, 'e.g. name@acoe.org',  false));
+    fields.appendChild(makeField('Referral Process',             'acht-'+r.id, 'textarea', howto, 'Describe how a staff member accesses this resource...', true));
+
+    // Buttons
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:.5rem;padding:0 1rem .85rem;justify-content:flex-end';
+
+    var clearBtn = document.createElement('button');
+    clearBtn.className = 'arc-clear';
+    clearBtn.textContent = 'Clear';
+    clearBtn.onclick = (function(id){ return function(){ clearResource(id); }; })(r.id);
+
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'arc-save';
+    saveBtn.textContent = 'Save →';
+    saveBtn.onclick = (function(id){ return function(){ saveResource(id); }; })(r.id);
+
+    btnRow.appendChild(clearBtn);
+    btnRow.appendChild(saveBtn);
+
+    arcBody.appendChild(fields);
+    arcBody.appendChild(btnRow);
+
+    card.appendChild(hdr);
+    card.appendChild(arcBody);
+    body.appendChild(card);
+  });
 }
 
 function toggleArc(id) {
-  const body = document.getElementById('arc-body-' + id);
-  const chev = document.getElementById('arc-chev-' + id);
-  const isOpen = body.style.display !== 'none';
-  // Close all first
-  RESOURCES.forEach(r => {
-    const b = document.getElementById('arc-body-' + r.id);
-    const c = document.getElementById('arc-chev-' + r.id);
+  RESOURCES.forEach(function(r) {
+    var b = document.getElementById('arc-body-' + r.id);
+    var c = document.getElementById('arc-chev-' + r.id);
     if (b) b.style.display = 'none';
     if (c) c.style.transform = '';
   });
-  // Open clicked if it was closed
-  if (!isOpen) {
-    body.style.display = 'block';
-    chev.style.transform = 'rotate(180deg)';
-  }
+  var body = document.getElementById('arc-body-' + id);
+  var chev = document.getElementById('arc-chev-' + id);
+  if (body) { body.style.display = 'block'; }
+  if (chev) { chev.style.transform = 'rotate(180deg)'; }
 }
 
 function saveResource(id) {
-  const contacts = loadContacts();
+  var contacts = loadContacts();
   contacts[id] = {
-    poc:   (document.getElementById('acp-'+id)||{}).value||'',
-    phone: (document.getElementById('acph-'+id)||{}).value||'',
-    email: (document.getElementById('acem-'+id)||{}).value||'',
-    howto: (document.getElementById('acht-'+id)||{}).value||'',
+    poc:   (document.getElementById('acp-'+id)  || {value:''}).value.trim(),
+    phone: (document.getElementById('acph-'+id) || {value:''}).value.trim(),
+    email: (document.getElementById('acem-'+id) || {value:''}).value.trim(),
+    howto: (document.getElementById('acht-'+id) || {value:''}).value.trim(),
   };
   saveContacts(contacts);
-  const r = RESOURCES.find(x => x.id===id);
+  var r = RESOURCES.find(function(x){ return x.id===id; });
   if (r) Object.assign(r, contacts[id]);
-  renderAdminEditor();
-  // Re-open the card
-  const body = document.getElementById('arc-body-'+id);
-  const chev = document.getElementById('arc-chev-'+id);
-  if (body) { body.style.display='block'; }
-  if (chev) { chev.style.transform='rotate(180deg)'; }
-  toast('Saved: ' + (r?r.name:id));
+  buildAdminCards();
+  // Re-open this card
+  var b = document.getElementById('arc-body-'+id);
+  var c = document.getElementById('arc-chev-'+id);
+  if (b) b.style.display = 'block';
+  if (c) c.style.transform = 'rotate(180deg)';
+  toast('Saved: ' + (r ? r.name : id));
 }
 
 function clearResource(id) {
   if (!confirm('Clear all contact info for this resource?')) return;
-  const contacts = loadContacts();
-  contacts[id] = { poc:'', phone:'', email:'', howto:'' };
+  var contacts = loadContacts();
+  contacts[id] = {poc:'', phone:'', email:'', howto:''};
   saveContacts(contacts);
-  const r = RESOURCES.find(x => x.id===id);
+  var r = RESOURCES.find(function(x){ return x.id===id; });
   if (r) Object.assign(r, contacts[id]);
-  renderAdminEditor();
-  toast('Cleared: ' + (r?r.name:id));
-}
-
-function saveAllResources() {
-  RESOURCES.forEach(r => {
-    const pocEl  = document.getElementById('acp-'+r.id);
-    if (!pocEl) return; // card not rendered
-    const contacts = loadContacts();
-    contacts[r.id] = {
-      poc:   pocEl.value||'',
-      phone: (document.getElementById('acph-'+r.id)||{}).value||'',
-      email: (document.getElementById('acem-'+r.id)||{}).value||'',
-      howto: (document.getElementById('acht-'+r.id)||{}).value||'',
-    };
-    saveContacts(contacts);
-    Object.assign(r, contacts[r.id]);
-  });
-  renderAdminEditor();
-  toast('All contacts saved');
+  buildAdminCards();
+  toast('Cleared: ' + (r ? r.name : id));
 }
 
 
