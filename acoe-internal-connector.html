@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACOE Internal Resource Connector</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0B7691;--teal2:#085566;--teal-l:#D0F4EE;
+  --gold:#C8860A;--gold-l:#FEF3D8;--gold-b:#F5BB4C;
+  --coral:#C94F2A;--coral-l:#FDEEE9;
+  --green:#2D7A4E;--green-l:#E4F3EB;
+  --purple:#5E3A8A;--purple-l:#EDE7F8;
+  --slate:#3D5166;--slate-l:#EEF2F6;
+  --ink:#0F1E2D;--ink2:#233345;--ink3:#4A6070;--ink4:#8AA0B0;
+  --bg:#F5F3EE;--bg2:#ECEAE3;--white:#FFFFFF;
+  --border:rgba(15,30,45,.1);--border2:rgba(15,30,45,.16);
+  --r:12px;--rlg:20px;--pill:100px;
+  --sh:0 1px 4px rgba(0,0,0,.05),0 6px 24px rgba(0,0,0,.05);
+  --sh-h:0 4px 20px rgba(0,0,0,.09),0 16px 48px rgba(0,0,0,.07);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
+
+/* ── LAYOUT ── */
+.wrap{max-width:980px;margin:0 auto;padding:0 1.5rem 4rem}
+
+/* ── HEADER ── */
+.site-hdr{background:var(--teal2);padding:1.5rem 0 0}
+.hdr-inner{max-width:980px;margin:0 auto;padding:0 1.5rem 1.5rem}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.5rem}
+.hdr-brand{display:flex;align-items:center;gap:.8rem}
+.hdr-shield{width:44px;height:44px;background:var(--gold-b);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-wordmark{font-family:var(--serif);font-size:1.4rem;color:white;line-height:1.15}
+.hdr-wordmark span{color:var(--gold-b)}
+.hdr-sub{font-family:var(--sans);font-size:.72rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
+.hdr-badge{background:rgba(245,187,76,.15);border:1px solid rgba(245,187,76,.3);border-radius:6px;padding:.3rem .75rem;font-size:.72rem;font-weight:600;color:var(--gold-b);letter-spacing:.04em;align-self:flex-start;margin-top:.25rem;white-space:nowrap}
+.hdr-tagline{font-size:.82rem;color:rgba(255,255,255,.5);font-style:italic;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.1)}
+
+/* ── STEP INDICATORS ── */
+.steps-bar{display:flex;gap:0;margin:2rem 0 1.5rem}
+.step{display:flex;align-items:center;gap:.5rem;flex:1}
+.step-n{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-n.done{background:var(--teal);color:white}
+.step-n.active{background:var(--gold-b);color:var(--ink)}
+.step-n.todo{background:var(--bg2);color:var(--ink4)}
+.step-label{font-size:.72rem;font-weight:600;color:var(--ink4);transition:color .2s}
+.step-label.active{color:var(--ink)}
+.step-label.done{color:var(--teal)}
+.step-line{flex:1;height:1px;background:var(--border2);margin:0 .25rem;min-width:16px}
+.step-line.done{background:var(--teal)}
+
+/* ── PANELS ── */
+.panel{background:var(--white);border-radius:var(--rlg);border:1px solid var(--border);box-shadow:var(--sh);padding:1.75rem;margin-bottom:1rem;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.panel-hdr{margin-bottom:1.25rem}
+.panel-hdr h2{font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-bottom:.25rem}
+.panel-hdr p{font-size:.85rem;color:var(--ink3);line-height:1.6}
+
+/* ── STUDENT PROFILE FORM ── */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+@media(max-width:560px){.field-grid{grid-template-columns:1fr}}
+.field-full{grid-column:1/-1}
+.fld{display:flex;flex-direction:column;gap:.28rem}
+.fld label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.fld input,.fld select,.fld textarea{border:1.5px solid var(--border2);border-radius:9px;padding:.55rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;background:white}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(11,118,145,.08)}
+.fld textarea{resize:vertical;min-height:72px;line-height:1.5}
+
+/* ── NEED CHIPS ── */
+.need-section{margin-bottom:1.25rem}
+.need-section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:.55rem;display:flex;align-items:center;gap:.45rem}
+.need-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:.35rem}
+.chip{display:inline-flex;align-items:center;gap:.4rem;border:1.5px solid var(--border2);border-radius:8px;padding:.42rem .78rem;cursor:pointer;font-size:.8rem;color:var(--ink3);font-weight:500;background:white;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-l)}
+.chip.on{border-color:var(--teal);background:var(--teal-l);color:var(--teal2);font-weight:600}
+.chip .chip-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .15s}
+.chip.on .chip-dot{background:var(--teal)}
+
+/* ── FREETEXT NEED ── */
+.ft-wrap{display:flex;gap:.5rem;align-items:flex-start;margin-top:.75rem}
+.ft-wrap textarea{flex:1;border:1.5px solid var(--border2);border-radius:9px;padding:.55rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);outline:none;resize:none;min-height:56px;line-height:1.5;transition:border-color .15s}
+.ft-wrap textarea:focus{border-color:var(--teal)}
+.ft-wrap button{background:var(--teal);color:white;border:none;border-radius:9px;padding:.55rem 1.1rem;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;align-self:flex-end}
+.ft-wrap button:hover{background:var(--teal2)}
+
+/* ── RESULTS ── */
+.results-header{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:1.1rem;flex-wrap:wrap}
+.results-header h3{font-family:var(--serif);font-size:1.25rem;color:var(--ink)}
+.results-count{font-family:var(--mono);font-size:.8rem;background:var(--teal-l);color:var(--teal);border-radius:var(--pill);padding:3px 10px}
+
+/* Resource cards */
+.res-card{border-radius:var(--rlg);border:1px solid var(--border);overflow:hidden;margin-bottom:.7rem;background:white;transition:box-shadow .15s}
+.res-card:hover{box-shadow:var(--sh-h)}
+.res-card-top{display:flex;gap:1rem;padding:1rem 1.1rem;cursor:pointer}
+.res-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.res-info{flex:1;min-width:0}
+.res-name{font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:.15rem}
+.res-tagline{font-size:.8rem;color:var(--ink3);line-height:1.5;margin-bottom:.4rem}
+.res-tags{display:flex;flex-wrap:wrap;gap:.25rem}
+.tag{font-size:.65rem;font-weight:700;border-radius:4px;padding:2px 7px;display:inline-block}
+.res-match-score{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;flex-shrink:0}
+.match-ring{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;font-family:var(--mono);border:2.5px solid var(--teal);color:var(--teal);background:var(--teal-l)}
+.expand-icon{font-size:.65rem;color:var(--ink4);transition:transform .2s}
+
+/* Expanded detail */
+.res-detail{display:none;border-top:1px solid var(--border);padding:1rem 1.1rem;background:var(--slate-l)}
+.res-detail.open{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.65rem;margin-bottom:.85rem}
+.detail-item{background:white;border-radius:var(--r);padding:.65rem .8rem;border:1px solid var(--border)}
+.detail-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4);margin-bottom:.2rem}
+.detail-value{font-size:.82rem;color:var(--ink);line-height:1.5}
+.action-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.btn-prim{background:var(--teal);color:white;border:none;border-radius:var(--pill);padding:7px 18px;font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-prim:hover{background:var(--teal2)}
+.btn-sec{background:transparent;border:1.5px solid var(--border2);color:var(--ink3);border-radius:var(--pill);padding:6px 16px;font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-sec:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── REFERRAL FORM ── */
+.ref-form{background:var(--teal-l);border:1.5px solid var(--teal);border-radius:var(--rlg);padding:1.25rem;margin-top:1rem;animation:fadeUp .2s ease}
+.ref-form h4{font-family:var(--serif);font-size:1.1rem;color:var(--teal2);margin-bottom:.85rem}
+.ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.75rem}
+@media(max-width:520px){.ref-grid{grid-template-columns:1fr}}
+.ref-full{grid-column:1/-1}
+.ref-fld label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--teal2);display:block;margin-bottom:.22rem}
+.ref-fld input,.ref-fld select,.ref-fld textarea{width:100%;border:1.5px solid rgba(11,118,145,.3);border-radius:8px;padding:.5rem .75rem;font-family:var(--sans);font-size:.85rem;color:var(--ink);outline:none;background:white;transition:border-color .15s}
+.ref-fld textarea{resize:vertical;min-height:60px;line-height:1.5}
+.ref-fld input:focus,.ref-fld select:focus,.ref-fld textarea:focus{border-color:var(--teal)}
+.ref-submit{background:var(--teal2);color:white;border:none;border-radius:var(--pill);padding:9px 24px;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s}
+.ref-submit:hover{background:var(--ink2)}
+
+/* ── CONFIRMATION ── */
+.confirm-box{background:var(--green-l);border:1.5px solid var(--green);border-radius:var(--rlg);padding:1.5rem;text-align:center;animation:fadeUp .22s ease}
+.confirm-box .ck{font-size:2rem;margin-bottom:.5rem}
+.confirm-box h3{font-family:var(--serif);font-size:1.3rem;color:var(--green);margin-bottom:.4rem}
+.confirm-box p{font-size:.85rem;color:var(--ink3);line-height:1.6;max-width:420px;margin:0 auto .9rem}
+.ref-id{font-family:var(--mono);font-size:.82rem;background:white;border:1px solid var(--border2);border-radius:6px;padding:4px 10px;color:var(--green);display:inline-block;margin-bottom:.85rem}
+
+/* ── CONTACT CARD (prominent in results) ── */
+.contact-card{background:linear-gradient(135deg,var(--teal2),var(--teal));border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.85rem;display:flex;align-items:flex-start;gap:.85rem;flex-wrap:wrap}
+.contact-card-info{flex:1;min-width:180px}
+.contact-card-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.6);margin-bottom:.3rem}
+.contact-card-poc{font-size:.95rem;font-weight:700;color:white;margin-bottom:.15rem}
+.contact-card-meta{font-size:.78rem;color:rgba(255,255,255,.75);line-height:1.5}
+.contact-card-meta a{color:#7ef8e0;text-decoration:none}
+.contact-card-meta a:hover{text-decoration:underline}
+.contact-card-actions{display:flex;gap:.4rem;flex-wrap:wrap;align-self:center}
+.cc-btn{display:inline-flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;border-radius:var(--pill);padding:5px 12px;font-size:.77rem;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s;font-family:var(--sans)}
+.cc-btn:hover{background:rgba(255,255,255,.28)}
+.contact-card.unpopulated{background:var(--bg2);border:1.5px dashed var(--border2)}
+.contact-card.unpopulated .contact-card-label{color:var(--ink4)}
+.contact-card.unpopulated .contact-card-poc{color:var(--ink3);font-style:italic}
+.contact-card.unpopulated .contact-card-meta{color:var(--ink4)}
+.edit-contact-btn{background:transparent;border:1px solid var(--border2);color:var(--ink4);border-radius:var(--pill);padding:3px 10px;font-size:.7rem;cursor:pointer;font-family:var(--sans);transition:all .15s;margin-top:.3rem;display:inline-flex;align-items:center;gap:.25rem}
+.edit-contact-btn:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── ADMIN MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;display:none;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal-box{background:white;border-radius:var(--rlg);padding:1.75rem;max-width:580px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.22);margin:auto}
+.modal-box h3{font-family:var(--serif);font-size:1.3rem;color:var(--ink);margin-bottom:.25rem}
+.modal-box .modal-sub{font-size:.8rem;color:var(--ink4);margin-bottom:1.1rem;line-height:1.5}
+.modal-field{margin-bottom:.75rem}
+.modal-field label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);display:block;margin-bottom:.25rem}
+.modal-field input,.modal-field textarea{width:100%;border:1.5px solid var(--border2);border-radius:9px;padding:.52rem .82rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);outline:none;transition:border-color .15s}
+.modal-field textarea{resize:vertical;min-height:72px;line-height:1.5}
+.modal-field input:focus,.modal-field textarea:focus{border-color:var(--teal)}
+.modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.1rem;padding-top:.85rem;border-top:1px solid var(--border)}
+.modal-save{background:var(--teal);color:white;border:none;border-radius:var(--pill);padding:8px 22px;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:background .15s}
+.modal-save:hover{background:var(--teal2)}
+.modal-cancel{background:transparent;border:1.5px solid var(--border2);color:var(--ink3);border-radius:var(--pill);padding:7px 18px;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s}
+.modal-cancel:hover{border-color:var(--ink3);color:var(--ink)}
+
+/* ── ADMIN DIRECTORY BUTTON ── */
+.admin-btn{background:var(--ink2);color:white;border:none;border-radius:var(--pill);padding:9px 18px;font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:.4rem;transition:background .15s}
+.admin-btn:hover{background:var(--teal2)}
+/* ── ADMIN RESOURCE EDITOR ── */
+.admin-res-card{background:white;border:1px solid var(--border);border-radius:var(--rlg);overflow:hidden;margin-bottom:.55rem;transition:box-shadow .15s}
+.admin-res-card:hover{box-shadow:var(--sh)}
+.arc-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;cursor:pointer;gap:.5rem}
+.arc-status{font-size:.63rem;font-weight:700;border-radius:var(--pill);padding:2px 9px;background:var(--bg2);color:var(--ink4)}
+.arc-status.filled{background:var(--green-l);color:var(--green)}
+.arc-chev{font-size:.65rem;color:var(--ink4);transition:transform .2s;flex-shrink:0}
+.arc-body{border-top:1px solid var(--border)}
+.arc-fields{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;padding:.9rem 1rem .6rem}
+@media(max-width:560px){.arc-fields{grid-template-columns:1fr}}
+.arc-field{display:flex;flex-direction:column;gap:.22rem}
+.arc-field-full{grid-column:1/-1}
+.arc-field label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.arc-field input,.arc-field textarea{border:1.5px solid var(--border2);border-radius:8px;padding:.5rem .78rem;font-family:var(--sans);font-size:.85rem;color:var(--ink);outline:none;transition:border-color .15s;width:100%}
+.arc-field input:focus,.arc-field textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(11,118,145,.08)}
+.arc-field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.arc-save{background:var(--teal);color:white;border:none;border-radius:var(--pill);padding:7px 20px;font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s}
+.arc-save:hover{background:var(--teal2)}
+.arc-clear{background:transparent;border:1.5px solid var(--border2);color:var(--ink4);border-radius:var(--pill);padding:6px 14px;font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+.arc-clear:hover{border-color:var(--coral);color:var(--coral)}
+/* ── EMPTY / MISC ── */
+.empty-ico{font-size:2rem;margin-bottom:.4rem;opacity:.3}
+.section-note{font-size:.78rem;color:var(--ink4);font-style:italic;margin-top:.5rem;line-height:1.6}
+.nav-btn{background:var(--teal);color:white;border:none;border-radius:var(--pill);padding:10px 26px;font-family:var(--sans);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .15s}
+.nav-btn:hover{background:var(--teal2)}
+.back-btn{background:transparent;border:1.5px solid var(--border2);color:var(--ink3);border-radius:var(--pill);padding:9px 22px;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
+.back-btn:hover{border-color:var(--ink3);color:var(--ink)}
+.btn-row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:1.25rem}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="site-hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div class="hdr-brand">
+        <div class="hdr-shield">
+          <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+            <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z" fill="#085566"/>
+            <path d="M9 12l2 2 4-4" stroke="#F5BB4C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="hdr-wordmark">ACOE <span>Internal</span> Resource Connector</div>
+          <div class="hdr-sub">Staff Use Only · Alameda County Office of Education</div>
+        </div>
+      </div>
+      <div class="hdr-badge">🔒 Internal Tool</div>
+    </div>
+    <div class="hdr-tagline" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <span>Match any student need to the right internal ACOE asset — instantly.</span>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                <button onclick="openAdminDirectory()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:var(--pill);padding:4px 12px;font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer">⚙ Manage Contacts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="wrap">
+
+  <!-- Step indicators -->
+  <div class="steps-bar" id="steps-bar">
+    <div class="step">
+      <div class="step-n active" id="sn1">1</div>
+      <div class="step-label active" id="sl1">Student</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step">
+      <div class="step-n todo" id="sn2">2</div>
+      <div class="step-label" id="sl2">Needs</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step">
+      <div class="step-n todo" id="sn3">3</div>
+      <div class="step-label" id="sl3">Resources</div>
+    </div>
+    <div class="step-line" id="line3"></div>
+    <div class="step">
+      <div class="step-n todo" id="sn4">4</div>
+      <div class="step-label" id="sl4">Connect</div>
+    </div>
+  </div>
+
+  <!-- ════ ADMIN TAB: MANAGE CONTACTS ════ -->
+  <div id="admin-tab" style="display:none">
+    <div class="panel">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
+        <div>
+          <h2 style="font-family:var(--serif);font-size:1.4rem;color:var(--ink)">Manage Resource Contacts</h2>
+          <p style="font-size:.83rem;color:var(--ink3);margin-top:.25rem;line-height:1.6">Add a point of contact, phone, email, and referral process for each ACOE resource. Click a resource to expand it. Changes save instantly to this browser.</p>
+        </div>
+        <button class="back-btn" onclick="closeAdminTab()">← Back to App</button>
+      </div>
+      <!-- Progress summary -->
+      <div id="admin-progress" style="background:var(--bg2);border-radius:var(--r);padding:.65rem 1rem;margin-bottom:1rem;font-size:.8rem;color:var(--ink3);display:flex;align-items:center;gap:.75rem;flex-wrap:wrap"></div>
+      <!-- Resource list -->
+      <div id="admin-editor-body"></div>
+      <div style="padding-top:.85rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem">
+        <button class="back-btn" onclick="closeAdminTab()">← Back to App</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STEP 1: STUDENT PROFILE ════ -->
+  <div id="step1">
+    <div class="panel">
+      <div class="panel-hdr">
+        <h2>Student Overview</h2>
+        <p>Tell us about the student. This helps surface the most relevant ACOE resources for their specific situation.</p>
+      </div>
+      <div class="field-grid">
+        <div class="fld"><label>Student First Name</label><input id="s-first" placeholder="First name"></div>
+        <div class="fld"><label>Student Last Name</label><input id="s-last" placeholder="Last name (or initials)"></div>
+        <div class="fld"><label>Grade / Level</label>
+          <select id="s-grade">
+            <option value="">Select…</option>
+            <option>Pre-K / Early Childhood</option>
+            <option>Elementary (K–5)</option>
+            <option>Middle School (6–8)</option>
+            <option>High School (9–12)</option>
+            <option>Adult Learner / HS Diploma</option>
+            <option>Post-Secondary / CTE</option>
+          </select>
+        </div>
+        <div class="fld"><label>Primary ACOE Site</label>
+          <select id="s-site">
+            <option value="">Select site…</option>
+            <option>Butler Academic Center (JJC)</option>
+            <option>Camp Sweeney</option>
+            <option>Quest Academy – Oakland</option>
+            <option>Quest Academy – Hayward</option>
+            <option>Quest – Emerge Oakland</option>
+            <option>Burke Academy (Parenting Teens)</option>
+            <option>Carolyn Hobbs Academy (Parenting Teens)</option>
+            <option>Opportunity Academy</option>
+            <option>Infant & Family Support Program</option>
+            <option>Adult Education</option>
+            <option>Other / Not yet enrolled</option>
+          </select>
+        </div>
+        <div class="fld"><label>Your Name</label><input id="s-staff" placeholder="Staff member name"></div>
+        <div class="fld"><label>Your Role</label>
+          <select id="s-role">
+            <option value="">Select…</option>
+            <option>Teacher</option>
+            <option>Social Worker</option>
+            <option>Principal / Assistant Principal</option>
+            <option>Ed Liaison</option>
+            <option>Case Manager</option>
+            <option>Para-Educator</option>
+            <option>Counselor</option>
+            <option>Probation / DPO</option>
+            <option>Other ACOE Staff</option>
+          </select>
+        </div>
+        <div class="fld field-full"><label>Additional context (optional)</label>
+          <textarea id="s-context" placeholder="Anything else that helps us surface the right resource — e.g. student is newly released from JJC, has an active IEP, primary language is Spanish, parent is unresponsive…"></textarea>
+        </div>
+      </div>
+      <div class="btn-row">
+        <div></div>
+        <button class="nav-btn" onclick="goStep(2)">Next: Identify Needs →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STEP 2: NEED SELECTION ════ -->
+  <div id="step2" style="display:none">
+    <div class="panel">
+      <div class="panel-hdr">
+        <h2>What does this student need?</h2>
+        <p>Select all that apply. You can also describe a need in your own words below — we'll match it to the right ACOE resource.</p>
+      </div>
+
+      <div class="need-section">
+        <div class="need-section-label">Academic & Learning</div>
+        <div class="chips-wrap" id="chips-academic"></div>
+      </div>
+      <div class="need-section">
+        <div class="need-section-label">Attendance & Engagement</div>
+        <div class="chips-wrap" id="chips-attendance"></div>
+      </div>
+      <div class="need-section">
+        <div class="need-section-label">Social-Emotional & Behavioral</div>
+        <div class="chips-wrap" id="chips-social"></div>
+      </div>
+      <div class="need-section">
+        <div class="need-section-label">Family & Basic Needs</div>
+        <div class="chips-wrap" id="chips-family"></div>
+      </div>
+      <div class="need-section">
+        <div class="need-section-label">Life Stage & Transition</div>
+        <div class="chips-wrap" id="chips-life"></div>
+      </div>
+
+      <div class="need-section">
+        <div class="need-section-label">Describe a need in your own words</div>
+        <div class="ft-wrap">
+          <textarea id="ft-need" placeholder="e.g. "Student missed 40 days and family won't answer the phone" or "Student is aging out of foster care and needs a post-secondary plan"…" rows="2"></textarea>
+          <button onclick="addFreeText()">+ Add</button>
+        </div>
+        <div id="ft-tags" style="display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="back-btn" onclick="goStep(1)">← Back</button>
+        <button class="nav-btn" onclick="findResources()">Find ACOE Resources →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STEP 3: RESULTS ════ -->
+  <div id="step3" style="display:none">
+    <div class="panel">
+      <div class="results-header">
+        <h3>Matched ACOE Resources</h3>
+        <span class="results-count" id="results-count">0 matches</span>
+      </div>
+      <div id="results-list"></div>
+      <div class="btn-row">
+        <button class="back-btn" onclick="goStep(2)">← Refine Needs</button>
+        <button class="nav-btn" onclick="goStep(4)" id="proceed-btn">Make a Connection →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STEP 4: REFERRAL / CONFIRM ════ -->
+  <div id="step4" style="display:none">
+    <div class="panel">
+      <div class="panel-hdr">
+        <h2>Make the Connection</h2>
+        <p>Complete this form to initiate an internal referral. The relevant ACOE team will be notified and follow up directly with you.</p>
+      </div>
+      <div id="selected-resources-summary" style="margin-bottom:1.1rem"></div>
+      <div class="ref-form">
+        <h4>Internal Referral Request</h4>
+        <div class="ref-grid">
+          <div class="ref-fld"><label>Student Name</label><input id="r-name" placeholder="Auto-filled…"></div>
+          <div class="ref-fld"><label>ACOE Site</label><input id="r-site" placeholder="Auto-filled…"></div>
+          <div class="ref-fld"><label>Your Name</label><input id="r-staff" placeholder="Auto-filled…"></div>
+          <div class="ref-fld"><label>Your Email</label><input type="email" id="r-email" placeholder="your.name@acoe.org"></div>
+          <div class="ref-fld ref-full"><label>Resources being requested</label><textarea id="r-resources" readonly style="background:#f8fafc;color:var(--ink3);font-size:.82rem" rows="3"></textarea></div>
+          <div class="ref-fld ref-full"><label>Urgency</label>
+            <select id="r-urgency">
+              <option value="">Select…</option>
+              <option>Immediate — student in crisis or at risk of dropping out</option>
+              <option>This week — needs connection within 3–5 days</option>
+              <option>Planning ahead — within 2–4 weeks is fine</option>
+            </select>
+          </div>
+          <div class="ref-fld ref-full"><label>Additional notes for the receiving team</label>
+            <textarea id="r-notes" placeholder="Any context that will help the receiving team — what you've already tried, what the student/family has said, relevant history…" rows="3"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="ref-submit" onclick="submitReferral()">Submit Internal Referral</button>
+          <button class="back-btn" onclick="goStep(3)">← Back to Results</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CONFIRMATION ════ -->
+  <div id="step-confirm" style="display:none">
+    <div class="confirm-box">
+      <div class="ck">✅</div>
+      <h3>Referral submitted!</h3>
+      <div class="ref-id" id="confirm-refid"></div>
+      <p>The ACOE team will follow up with you directly. In the meantime, you can find contact information for each resource in the results below.</p>
+      <button class="nav-btn" onclick="startOver()">Start a New Referral</button>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════
+//  NEED CATEGORIES + CHIPS
+// ═══════════════════════════════════════════
+const NEED_CATS = {
+  'chips-academic': [
+    { id:'literacy',   label:'Reading / literacy gaps',          icon:'📖' },
+    { id:'math',       label:'Math struggles',                   icon:'🔢' },
+    { id:'credits',    label:'Credit deficiency / behind grade', icon:'📋' },
+    { id:'hs-diploma', label:'Needs HS diploma as adult',        icon:'🎓' },
+    { id:'sped',       label:'Suspected learning disability / IEP needed', icon:'🧩' },
+    { id:'iep-active', label:'Active IEP — services coordination', icon:'📑' },
+    { id:'ell',        label:'English learner support',          icon:'🌐' },
+    { id:'tutoring',   label:'Needs 1:1 tutoring',               icon:'✏️' },
+    { id:'postsec',    label:'Post-secondary / college pathway',  icon:'🏫' },
+    { id:'career',     label:'Career / trades pathway (CTE)',     icon:'🔧' },
+  ],
+  'chips-attendance': [
+    { id:'truancy',    label:'Chronic truancy / absences',       icon:'🚨' },
+    { id:'home-visit', label:'Family not responding — home visit needed', icon:'🏠' },
+    { id:'re-engage',  label:'Disengaged — needs re-engagement', icon:'🔄' },
+    { id:'dropout',    label:'At risk of dropping out',          icon:'⚠️' },
+    { id:'expelled',   label:'Expelled / returning from expulsion', icon:'📁' },
+    { id:'jjc-return', label:'Returning from JJC / Camp Sweeney', icon:'🔓' },
+  ],
+  'chips-social': [
+    { id:'mh',         label:'Mental health concerns',           icon:'🧠' },
+    { id:'trauma',     label:'Trauma history / PTSD indicators', icon:'💙' },
+    { id:'behavior',   label:'Behavioral challenges in school',  icon:'🛑' },
+    { id:'crisis',     label:'Student in active crisis',         icon:'🆘' },
+    { id:'substance',  label:'Substance use concerns',           icon:'⚕️' },
+    { id:'violence',   label:'Connected to violence / high-risk', icon:'🛡️' },
+  ],
+  'chips-family': [
+    { id:'foster',     label:'Foster care / child welfare involved', icon:'🏡' },
+    { id:'probation',  label:'On probation / justice involved',  icon:'⚖️' },
+    { id:'housing',    label:'Housing instability / homeless',   icon:'🏘️' },
+    { id:'food',       label:'Food insecurity / basic needs',    icon:'🥗' },
+    { id:'parent',     label:'Parent needs support / engagement', icon:'👨‍👩‍👧' },
+    { id:'language',   label:'Family language barrier',          icon:'💬' },
+    { id:'infant',     label:'Infant (0–3) with developmental delays', icon:'👶' },
+  ],
+  'chips-life': [
+    { id:'pregnant',   label:'Pregnant or parenting teen',       icon:'🤱' },
+    { id:'childcare',  label:'Needs childcare to attend school', icon:'👶' },
+    { id:'aging-out',  label:'Aging out of foster care (18+)',   icon:'🔑' },
+    { id:'adult-ed',   label:'Adult learner returning to school', icon:'📚' },
+    { id:'transition', label:'Transitioning out of system',      icon:'🚀' },
+    { id:'employment', label:'Needs employment / job training',  icon:'💼' },
+  ],
+};
+
+// ═══════════════════════════════════════════
+//  ACOE INTERNAL RESOURCES
+// ═══════════════════════════════════════════
+const RESOURCES = [
+  {
+    id:'literacy-spec',
+    name:'ACOE Literacy Specialists',
+    tagline:'Intensive reading and literacy intervention for students significantly behind grade level',
+    icon:'📖', iconBg:'#FEF3D8',
+    tags:['Academic','K–12','In-Person'],
+    tagColors:{ Academic:'#C8860A', 'K–12':'#0B7691', 'In-Person':'#2D7A4E' },
+    needs:['literacy','sped','iep-active','ell','credits','re-engage'],
+    poc:'', email:'literacyspecialists@acoe.org', phone:'(510) 670-4590',
+    howto:'Request via your site principal. Specialists are deployed based on assessment and availability.',
+    turnaround:'1–2 weeks',
+    eligibility:'ACOE-enrolled students with documented reading/literacy gaps',
+    notes:'Specialists can co-teach or pull small groups. Coordinate with SpEd team for IEP-eligible students.',
+  },
+  {
+    id:'sylvan',
+    name:'Sylvan Learning – 1:1 Tutoring (ACOE Contract)',
+    tagline:'High-dosage, individualized tutoring in reading and math through ACOE\'s Sylvan contract',
+    icon:'✏️', iconBg:'#D0F4EE',
+    tags:['Academic','1:1 Tutoring','Funded'],
+    tagColors:{ Academic:'#C8860A', '1:1 Tutoring':'#0B7691', Funded:'#2D7A4E' },
+    needs:['tutoring','literacy','math','credits','re-engage','dropout'],
+    poc:'', email:'tutoring@acoe.org', phone:'(510) 670-4590',
+    howto:'Submit a referral through your site Social Worker. Authorization required — confirm slot availability before promising to families.',
+    turnaround:'1–3 weeks',
+    eligibility:'ACOE-enrolled students with demonstrated academic need',
+    notes:'Funded through ACOE contract. Limited slots — prioritize students at risk of not meeting credit requirements.',
+  },
+  {
+    id:'pact',
+    name:'PACT Program – Education Liaison Home Visits',
+    tagline:'Ed Liaisons visit students and families at home to address truancy, re-engagement, and barriers to attendance',
+    icon:'🏠', iconBg:'#EDE7F8',
+    tags:['Attendance','Home Visit','Countywide'],
+    tagColors:{ Attendance:'#C94F2A', 'Home Visit':'#5E3A8A', Countywide:'#0B7691' },
+    needs:['truancy','home-visit','re-engage','dropout','expelled','jjc-return','foster','housing','parent'],
+    poc:'', email:'pact@acoe.org', phone:'(510) 670-4590',
+    howto:'Refer via your site principal or Social Worker. Document prior outreach attempts before requesting a home visit.',
+    turnaround:'2–5 business days',
+    eligibility:'Students with 5+ unexcused absences, or where phone/email outreach has failed',
+    notes:'Ed Liaisons can coordinate with Probation DPOs, SSA workers, and CBOs during home visits. Up to $5K/student available for barrier removal.',
+  },
+  {
+    id:'social-workers',
+    name:'ACOE Site Social Workers',
+    tagline:'On-site social workers providing case management, crisis support, family engagement, and resource navigation',
+    icon:'🤝', iconBg:'#E4F3EB',
+    tags:['Social-Emotional','Case Management','All Sites'],
+    tagColors:{ 'Social-Emotional':'#5E3A8A', 'Case Management':'#0B7691', 'All Sites':'#2D7A4E' },
+    needs:['mh','trauma','behavior','crisis','foster','probation','housing','food','parent','language','pregnant','aging-out','transition'],
+    poc:'', email:'socialwork@acoe.org', phone:'Site-specific — ask your principal',
+    howto:'Walk in or email your site Social Worker directly. For urgent situations, flag immediately to the principal.',
+    turnaround:'Same day for urgent / 1–2 days standard',
+    eligibility:'All ACOE-enrolled students',
+    notes:'Social Workers are CANS-certified and can connect families to county resources including SSA, ACBH, and housing programs. Also coordinate with DPOs for probation-involved students.',
+  },
+  {
+    id:'psych',
+    name:'ACOE School Psychologists',
+    tagline:'Psychoeducational assessments, IEP evaluations, crisis support, and consultation for complex student needs',
+    icon:'🧠', iconBg:'#EDE7F8',
+    tags:['Mental Health','Assessment','IEP'],
+    tagColors:{ 'Mental Health':'#5E3A8A', Assessment:'#C8860A', IEP:'#0B7691' },
+    needs:['sped','iep-active','mh','trauma','behavior','crisis','substance'],
+    poc:'', email:'schoolpsych@acoe.org', phone:'(510) 670-4590',
+    howto:'Request via SpEd coordinator or principal. For crisis situations, contact directly.',
+    turnaround:'Assessment: 60 days / Crisis consult: same day',
+    eligibility:'Students with suspected disability, active IEPs, or significant mental health needs',
+    notes:'Psychologists work closely with Behaviorists and Social Workers. Required for initial IEP eligibility determinations.',
+  },
+  {
+    id:'behaviorist',
+    name:'ACOE Behaviorists (Board Certified)',
+    tagline:'Behavioral assessment, intervention planning, and staff coaching for students with significant behavioral challenges',
+    icon:'🛑', iconBg:'#FDEEE9',
+    tags:['Behavioral','Intervention','IEP Support'],
+    tagColors:{ Behavioral:'#C94F2A', Intervention:'#C8860A', 'IEP Support':'#0B7691' },
+    needs:['behavior','sped','iep-active','trauma','mh','crisis'],
+    poc:'', email:'behaviorists@acoe.org', phone:'(510) 670-4590',
+    howto:'Submit referral through SpEd coordinator. Behaviorist will conduct observation and develop Behavior Intervention Plan (BIP).',
+    turnaround:'1–2 weeks for assessment',
+    eligibility:'Students with active IEPs or significant behavioral needs affecting learning',
+    notes:'Can provide classroom coaching for teachers and support para-educators in implementing behavior plans.',
+  },
+  {
+    id:'sped',
+    name:'ACOE Special Education Team',
+    tagline:'Full continuum of special education services including assessment, IEP development, and specialized instruction',
+    icon:'📑', iconBg:'#D0F4EE',
+    tags:['Special Education','IEP','Assessment'],
+    tagColors:{ 'Special Education':'#0B7691', IEP:'#2D7A4E', Assessment:'#C8860A' },
+    needs:['sped','iep-active','behavior','mh','credits','ell','literacy','math'],
+    poc:'', email:'specialeducation@acoe.org', phone:'(510) 670-4590',
+    howto:'Initiate a Student Study Team (SST) if no IEP exists. For students with active IEPs transferring in, request records immediately from prior district.',
+    turnaround:'SST within 30 days / Assessment within 60 days',
+    eligibility:'Students with suspected or documented disabilities',
+    notes:'Out-of-district IEPs must be honored upon enrollment. Contact SpEd Coordinator within first week for any student with an active IEP.',
+  },
+  {
+    id:'ptp',
+    name:'ACOE Parenting Teen Program (PTP) + Childcare',
+    tagline:'Educational settings with on-site childcare for pregnant and parenting teens — Burke Academy (Hayward) and Carolyn Hobbs (San Leandro)',
+    icon:'🤱', iconBg:'#FEF3D8',
+    tags:['Parenting Teens','Childcare On-Site','South County'],
+    tagColors:{ 'Parenting Teens':'#C8860A', 'Childcare On-Site':'#2D7A4E', 'South County':'#0B7691' },
+    needs:['pregnant','childcare','parent','housing','food','dropout','credits'],
+    poc:'', email:'SPASenrollment@acoe.org', phone:'(510) 670-4590',
+    howto:'Complete ACOE Community School Referral Form and submit to SPASenrollment@acoe.org. Parent/Guardian home district must approve.',
+    turnaround:'Referral review within 5 business days',
+    eligibility:'Pregnant or parenting students — home district approval required',
+    notes:'On-site childcare means a student can bring their infant/toddler to school. Social Workers on-site for wraparound support. Classes include parenting education alongside academics.',
+  },
+  {
+    id:'infant-fam',
+    name:'ACOE Infant & Family Support Program',
+    tagline:'In-home early intervention for children ages 0–3 with developmental delays — free, countywide, California Early Start',
+    icon:'👶', iconBg:'#E4F3EB',
+    tags:['Early Childhood','In-Home','Free'],
+    tagColors:{ 'Early Childhood':'#2D7A4E', 'In-Home':'#0B7691', Free:'#C8860A' },
+    needs:['infant','pregnant','parent','foster','housing'],
+    poc:'', email:'infantfamily@acoe.org', phone:'Oakland: (510) 619-0536 | Hayward: (510) 670-4170',
+    howto:'Refer any family with a child 0–3 showing developmental concerns. Family can also self-refer. No cost to families.',
+    turnaround:'Initial contact within 5 business days',
+    eligibility:'Children birth–3 years with developmental delays or at risk. No income requirement.',
+    notes:'Part of California\'s Early Start program. Also valuable for parenting teens whose infants may have developmental needs.',
+  },
+  {
+    id:'career-cm',
+    name:'ACOE Career Pathway Case Managers',
+    tagline:'Case managers connecting high school seniors to career and CTE pathways — trades, healthcare, technology, and community college',
+    icon:'🔧', iconBg:'#FEF3D8',
+    tags:['CTE / Trades','College Pathway','Seniors'],
+    tagColors:{ 'CTE / Trades':'#C8860A', 'College Pathway':'#0B7691', Seniors:'#2D7A4E' },
+    needs:['career','postsec','employment','transition','aging-out','adult-ed','dropout'],
+    poc:'', email:'careerpathways@acoe.org', phone:'(510) 670-4590',
+    howto:'Refer high school juniors and seniors, or adult learners close to diploma completion. Case managers can connect to apprenticeships, ROP, Laney/Merritt, and employer partnerships.',
+    turnaround:'Initial meeting within 1–2 weeks',
+    eligibility:'ACOE HS students (priority: seniors, justice-involved, foster youth)',
+    notes:'Case managers have connections to the trades (HVAC, electrical, construction), healthcare CTE, and dual-enrollment pathways. For students aging out of foster care, also coordinate with ILP.',
+  },
+  {
+    id:'ed-liaison',
+    name:'ACOE Education Liaisons (JJC / Transition Center)',
+    tagline:'Ed Liaisons support students returning from the JJC, ensure educational continuity, and coordinate with Probation and SSA',
+    icon:'🔓', iconBg:'#EDE7F8',
+    tags:['Reentry','Justice-Involved','Probation Coordination'],
+    tagColors:{ Reentry:'#5E3A8A', 'Justice-Involved':'#C94F2A', 'Probation Coordination':'#0B7691' },
+    needs:['jjc-return','probation','expelled','re-engage','truancy','home-visit','foster','credits','transition'],
+    poc:'', email:'edliaisons@acoe.org', phone:'(510) 670-4590',
+    howto:'For youth returning from JJC, notify Ed Liaisons before release date. For post-release enrollment support, contact within 48 hours of release.',
+    turnaround:'Within 48 hours for returning JJC youth',
+    eligibility:'Students returning from JJC, on probation, or involved with child welfare',
+    notes:'Ed Liaisons have authority under AB 490 and McKinney-Vento to enroll students without standard documentation. They coordinate directly with DPOs, SSA workers, and ACOE schools.',
+  },
+  {
+    id:'ell-support',
+    name:'ACOE English Learner Support',
+    tagline:'ELPAC assessment, reclassification support, and instructional resources for English learners across ACOE sites',
+    icon:'🌐', iconBg:'#D0F4EE',
+    tags:['English Learners','Assessment','Bilingual'],
+    tagColors:{ 'English Learners':'#0B7691', Assessment:'#C8860A', Bilingual:'#2D7A4E' },
+    needs:['ell','language','literacy','sped','parent'],
+    poc:'', email:'el@acoe.org', phone:'(510) 670-4590',
+    howto:'Ensure ELPAC screening is completed within 30 days of enrollment for any student whose home language is not English. Contact EL Coordinator for IFEP/RFEP documentation.',
+    turnaround:'ELPAC screening within 30 days of enrollment',
+    eligibility:'All students whose home language survey indicates a language other than English',
+    notes:'Also contact if family needs interpretation services for IEP meetings, parent conferences, or school communications.',
+  },
+  {
+    id:'adult-ed',
+    name:'ACOE Adult Education / Opportunity Academy',
+    tagline:'Alternative diploma completion for adult learners and over-age students — flexible scheduling, credit recovery, GED prep',
+    icon:'📚', iconBg:'#FEF3D8',
+    tags:['Adult Education','Diploma Completion','Flexible Schedule'],
+    tagColors:{ 'Adult Education':'#C8860A', 'Diploma Completion':'#0B7691', 'Flexible Schedule':'#2D7A4E' },
+    needs:['adult-ed','hs-diploma','credits','dropout','aging-out','transition','employment','postsec'],
+    poc:'', email:'SPASenrollment@acoe.org', phone:'(510) 670-4590',
+    howto:'Refer adult learners (18+) or significantly over-age students (16+) who need diploma completion. Evening and flexible scheduling available.',
+    turnaround:'Enrollment review within 5 business days',
+    eligibility:'Students 16+ who are significantly over-age or adults seeking HS diploma',
+    notes:'Opportunity Academy serves students 16 and older in Oakland and Hayward. Adult Ed serves 18+. Both include credit recovery and post-secondary connections.',
+  },
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let selectedNeeds = new Set();
+let freeTextNeeds = [];
+let selectedResourceIds = new Set();
+let currentStep = 1;
+
+// ═══════════════════════════════════════════
+//  BUILD CHIPS
+// ═══════════════════════════════════════════
+function buildChips() {
+  Object.entries(NEED_CATS).forEach(([containerId, needs]) => {
+    const wrap = document.getElementById(containerId);
+    if (!wrap) return;
+    wrap.innerHTML = needs.map(n => `
+      <div class="chip" id="chip-${n.id}" onclick="toggleNeed('${n.id}')">
+        <span class="chip-dot"></span>${n.icon} ${n.label}
+      </div>`).join('');
+  });
+}
+
+function toggleNeed(id) {
+  const chip = document.getElementById('chip-' + id);
+  if (selectedNeeds.has(id)) {
+    selectedNeeds.delete(id);
+    chip.classList.remove('on');
+  } else {
+    selectedNeeds.add(id);
+    chip.classList.add('on');
+  }
+}
+
+function addFreeText() {
+  const ta = document.getElementById('ft-need');
+  const val = ta.value.trim();
+  if (!val) return;
+  freeTextNeeds.push(val);
+  // Auto-match keywords to need IDs
+  autoMatchFreeText(val);
+  ta.value = '';
+  renderFtTags();
+}
+
+function autoMatchFreeText(text) {
+  const t = text.toLowerCase();
+  const kws = {
+    literacy: ['read','literacy','phonics','fluent','decod'],
+    math: ['math','algebra','numeracy','geometry'],
+    tutoring: ['tutor','one-on-one','1:1','extra help'],
+    truancy: ['absent','attendance','truant','missing school','not coming'],
+    'home-visit': ['home visit','won\'t answer','not responding','can\'t reach family','phone'],
+    mh: ['mental health','anxiety','depression','counseling','therapy'],
+    crisis: ['crisis','emergency','harm','danger','suicide'],
+    pregnant: ['pregnant','baby','expecting','due date','birth'],
+    infant: ['infant','toddler','0-3','0 to 3','developmental','baby'],
+    'jjc-return': ['jjc','released','detention','camp sweeney','custody'],
+    foster: ['foster','group home','ssa','child welfare','placement'],
+    housing: ['homeless','housing','couch surf','shelter','unstable'],
+    ell: ['english learner','ell','eltac','bilingual','spanish','language'],
+    credits: ['credit','behind','grade level','not graduating'],
+    career: ['career','trades','cte','job','work','apprentice'],
+    'adult-ed': ['adult','diploma','ged','18','over age'],
+    sped: ['iep','disability','special ed','assessment','504'],
+  };
+  Object.entries(kws).forEach(([needId, words]) => {
+    if (words.some(w => t.includes(w))) selectedNeeds.add(needId);
+  });
+}
+
+function renderFtTags() {
+  const wrap = document.getElementById('ft-tags');
+  wrap.innerHTML = freeTextNeeds.map((t, i) => `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:.75rem;color:var(--ink3);display:flex;align-items:center;gap:.4rem">
+      "${t}" <span onclick="removeFt(${i})" style="cursor:pointer;color:var(--coral);font-weight:700;margin-left:2px">×</span>
+    </div>`).join('');
+}
+
+function removeFt(i) {
+  freeTextNeeds.splice(i, 1);
+  renderFtTags();
+}
+
+// ═══════════════════════════════════════════
+//  RESOURCE MATCHING
+// ═══════════════════════════════════════════
+function findResources() {
+  if (selectedNeeds.size === 0 && freeTextNeeds.length === 0) {
+    alert('Please select at least one need, or describe a need in your own words.');
+    return;
+  }
+  goStep(3);
+  renderResults();
+}
+
+function scoreResource(res) {
+  let score = 0;
+  res.needs.forEach(n => { if (selectedNeeds.has(n)) score++; });
+  return score;
+}
+
+function renderResults() {
+  const scored = RESOURCES.map(r => ({ ...r, score: scoreResource(r) }))
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  const list = document.getElementById('results-list');
+  const count = document.getElementById('results-count');
+  count.textContent = scored.length + ' match' + (scored.length !== 1 ? 'es' : '');
+
+  if (!scored.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">🔍</div><div style="font-size:.85rem">No resources matched your selections. Try adding more needs or describing the situation in your own words.</div></div>`;
+    return;
+  }
+
+  const maxScore = scored[0].score;
+
+  list.innerHTML = scored.map(r => {
+    const pct = Math.round((r.score / Math.max(r.needs.length, 1)) * 100);
+    const tagsHtml = r.tags.map(t =>
+      `<span class="tag" style="background:${r.tagColors[t] ? r.tagColors[t]+'20' : '#eee'};color:${r.tagColors[t] || '#666'}">${t}</span>`
+    ).join('');
+    return `
+    <div class="res-card" id="rcard-${r.id}">
+      <div class="res-card-top" onclick="toggleDetail('${r.id}')">
+        <div class="res-icon" style="background:${r.iconBg}">${r.icon}</div>
+        <div class="res-info">
+          <div class="res-name">${r.name}</div>
+          <div class="res-tagline">${r.tagline}</div>
+          <div class="res-tags">${tagsHtml}</div>
+        </div>
+        <div class="res-match-score">
+          <div class="match-ring" title="${r.score} need${r.score!==1?'s':''} matched">${r.score}</div>
+          <div style="font-size:.65rem;color:var(--ink4);text-align:right">need${r.score!==1?'s':''}<br>matched</div>
+          <div class="expand-icon" id="ei-${r.id}">▼</div>
+        </div>
+      </div>
+      <div class="res-detail" id="det-${r.id}">
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">How to Access</div><div class="detail-value">${r.howto}</div></div>
+          <div class="detail-item"><div class="detail-label">Typical Turnaround</div><div class="detail-value">${r.turnaround}</div></div>
+          <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value"><a href="mailto:${r.email}" style="color:var(--teal)">${r.email}</a><br>${r.phone}</div></div>
+          <div class="detail-item"><div class="detail-label">Eligibility</div><div class="detail-value">${r.eligibility}</div></div>
+        </div>
+        <div class="detail-item" style="margin-bottom:.85rem;border:1px solid var(--border);border-radius:var(--r);padding:.65rem .8rem;background:white"><div class="detail-label">Staff Notes</div><div class="detail-value">${r.notes}</div></div>
+        <div class="action-btns">
+          <button class="btn-prim" onclick="toggleSelect('${r.id}',this)">${selectedResourceIds.has(r.id)?'✓ Selected':'+ Request this resource'}</button>
+          <a href="mailto:${r.email}?subject=ACOE Internal Resource Request&body=Hi, I am requesting support from ${encodeURIComponent(r.name)} for a student. Please follow up at your earliest convenience." class="btn-sec" style="text-decoration:none;display:inline-flex;align-items:center">📧 Email directly</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDetail(id) {
+  const det = document.getElementById('det-' + id);
+  const ei  = document.getElementById('ei-' + id);
+  det.classList.toggle('open');
+  if (ei) ei.style.transform = det.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function toggleSelect(id, btn) {
+  if (selectedResourceIds.has(id)) {
+    selectedResourceIds.delete(id);
+    btn.textContent = '+ Request this resource';
+    btn.style.background = '';
+  } else {
+    selectedResourceIds.add(id);
+    btn.textContent = '✓ Selected';
+    btn.style.background = 'var(--green)';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  STEP NAVIGATION
+// ═══════════════════════════════════════════
+function goStep(n) {
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('step'+i);
+    if (el) el.style.display = i===n ? 'block' : 'none';
+  });
+  document.getElementById('step-confirm').style.display = 'none';
+  currentStep = n;
+  updateStepBar(n);
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  if (n === 4) prefillReferral();
+}
+
+function updateStepBar(n) {
+  [1,2,3,4].forEach(i => {
+    const sn = document.getElementById('sn'+i);
+    const sl = document.getElementById('sl'+i);
+    const ln = document.getElementById('line'+i);
+    if (!sn) return;
+    sn.className = 'step-n ' + (i<n?'done':i===n?'active':'todo');
+    sl.className = 'step-label ' + (i<n?'done':i===n?'active':'');
+    sn.textContent = i<n ? '✓' : i;
+    if (ln) ln.className = 'step-line ' + (i<n?'done':'');
+  });
+}
+
+function prefillReferral() {
+  document.getElementById('r-name').value =
+    (document.getElementById('s-first').value + ' ' + document.getElementById('s-last').value).trim();
+  document.getElementById('r-site').value = document.getElementById('s-site').value;
+  document.getElementById('r-staff').value = document.getElementById('s-staff').value;
+
+  const sel = RESOURCES.filter(r => selectedResourceIds.has(r.id));
+  const allScored = RESOURCES.map(r => ({...r, score:scoreResource(r)}))
+    .filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
+  const shown = sel.length > 0 ? sel : allScored.slice(0,3);
+  document.getElementById('r-resources').value = shown.map(r=>r.name).join('\n');
+
+  // Summary
+  const sum = document.getElementById('selected-resources-summary');
+  sum.innerHTML = `<div style="background:var(--slate-l);border:1px solid var(--border2);border-radius:var(--r);padding:.85rem 1rem;font-size:.82rem">
+    <div style="font-weight:700;color:var(--ink);margin-bottom:.4rem">Resources being requested:</div>
+    ${shown.map(r=>`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem"><span>${r.icon}</span><span style="color:var(--teal);font-weight:600">${r.name}</span></div>`).join('')}
+    ${sel.length===0?'<div style="color:var(--ink4);font-style:italic;margin-top:.35rem;font-size:.78rem">No resources specifically selected — showing top matches. Go back to select specific resources.</div>':''}
+  </div>`;
+}
+
+function submitReferral() {
+  const name = document.getElementById('r-name').value;
+  const staff = document.getElementById('r-staff').value;
+  const email = document.getElementById('r-email').value;
+  const urgency = document.getElementById('r-urgency').value;
+  if (!name || !staff || !email || !urgency) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+  const refId = 'ACOE-INT-' + Date.now().toString(36).toUpperCase();
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('step'+i);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('step-confirm').style.display = 'block';
+  document.getElementById('confirm-refid').textContent = 'Ref: ' + refId;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startOver() {
+  selectedNeeds = new Set();
+  freeTextNeeds = [];
+  selectedResourceIds = new Set();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  document.getElementById('ft-tags').innerHTML = '';
+  ['s-first','s-last','s-staff','r-email','r-notes','ft-need'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['s-grade','s-site','s-role','r-urgency'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('step-confirm').style.display = 'none';
+  goStep(1);
+}
+
+// ═══════════════════════════════════════════
+//  SHEET CONFIG
+// ═══════════════════════════════════════════
+const CONTACTS_KEY  = 'acoe_contacts_v1';
+
+
+// ─── localStorage cache ────────────────────
+function loadContacts() {
+  try { return JSON.parse(localStorage.getItem(CONTACTS_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveContacts(contacts) {
+  localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+}
+
+// ─── Merge saved/fetched contacts into RESOURCES ──────────────
+function applyContacts(contacts) {
+  RESOURCES.forEach(r => {
+    if (contacts[r.id]) Object.assign(r, contacts[r.id]);
+  });
+}
+function applyStoredContacts() {
+  applyContacts(loadContacts());
+}
+
+// ─── Per-resource contact getter ──────────
+function getContact(id) {
+  const base = RESOURCES.find(r => r.id === id) || {};
+  return { poc:'', phone:'', email:'', howto:'', ...base };
+}
+
+
+// ═══════════════════════════════════════════
+//  SETUP MODAL
+// ═══════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════
+//  CONTACT CARD HTML
+// ═══════════════════════════════════════════
+function contactCardHtml(r) {
+  const c = getContact(r.id);
+  const hasPoc   = c.poc   && c.poc.trim();
+  const hasPhone = c.phone && c.phone.trim();
+  const hasEmail = c.email && c.email.trim();
+  const hasHowto = c.howto && c.howto.trim();
+  const populated = hasPoc || hasPhone || hasEmail;
+
+  if (!populated) {
+    return `
+    <div class="contact-card unpopulated">
+      <div class="contact-card-info">
+        <div class="contact-card-label">Point of Contact</div>
+        <div class="contact-card-poc">Not yet configured</div>
+        <div class="contact-card-meta">Use the ⚙ Manage Contacts button to add a point of contact, phone, email, and referral process for this resource.</div>
+      </div>
+      <button class="edit-contact-btn" onclick="openEditModal('${r.id}',event)">✏️ Add Contact</button>
+    </div>`;
+  }
+
+  return `
+  <div class="contact-card">
+    <div class="contact-card-info">
+      <div class="contact-card-label">Point of Contact</div>
+      ${hasPoc  ? `<div class="contact-card-poc">${esc(c.poc)}</div>` : ''}
+      <div class="contact-card-meta">
+        ${hasPhone ? `📞 ${esc(c.phone)}<br>` : ''}
+        ${hasEmail ? `✉️ <a href="mailto:${esc(c.email)}">${esc(c.email)}</a><br>` : ''}
+      </div>
+      ${hasHowto ? `<div style="margin-top:.5rem;font-size:.78rem;background:rgba(255,255,255,.12);border-radius:6px;padding:.45rem .6rem;color:rgba(255,255,255,.9);line-height:1.55"><strong style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.6);margin-bottom:.2rem">Referral Process</strong>${esc(c.howto)}</div>` : ''}
+    </div>
+    <div class="contact-card-actions">
+      ${hasPhone ? `<a class="cc-btn" href="tel:${c.phone.replace(/\D/g,'')}">📞 Call</a>` : ''}
+      ${hasEmail ? `<a class="cc-btn" href="mailto:${esc(c.email)}?subject=ACOE Internal Resource Request — ${esc(r.name)}">✉️ Email</a>` : ''}
+      <button class="cc-btn" onclick="openEditModal('${r.id}',event)" style="background:rgba(255,255,255,.1)">✏️ Edit</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════════════════
+let editingId = null;
+
+function openEditModal(id, event) {
+  if (event) event.stopPropagation();
+  editingId = id;
+  const c = getContact(id);
+  const r = RESOURCES.find(r => r.id === id);
+  document.getElementById('modal-resource-name').textContent = r ? r.icon + '  ' + r.name : id;
+  document.getElementById('m-poc').value   = c.poc   || '';
+  document.getElementById('m-phone').value = c.phone || '';
+  document.getElementById('m-email').value = c.email || '';
+  document.getElementById('m-howto').value = c.howto || '';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingId = null;
+}
+
+function saveContact() {
+  if (!editingId) return;
+  const contacts = loadContacts();
+  contacts[editingId] = {
+    poc:   document.getElementById('m-poc').value.trim(),
+    phone: document.getElementById('m-phone').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    howto: document.getElementById('m-howto').value.trim(),
+  };
+  saveContacts(contacts);
+  // Update live resource object
+  const r = RESOURCES.find(r => r.id === editingId);
+  if (r) Object.assign(r, contacts[editingId]);
+  closeModal();
+  // Re-render if on results step
+  if (currentStep === 3) renderResults();
+  renderAdminEditor();
+  toast('Contact saved for ' + (r ? r.name : editingId));
+  // Return to admin directory if triggered from there
+  if (_pendingAdminReturn) { _pendingAdminReturn = false; openAdminDirectory(); }
+}
+
+// Close modal on overlay click
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════════
+//  ADMIN DIRECTORY
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  ADMIN TAB — full inline editor
+// ═══════════════════════════════════════════
+function openAdminDirectory() {
+  // Show admin tab as a step overlay
+  document.getElementById('admin-tab').style.display = 'block';
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'none';
+  document.getElementById('step4').style.display = 'none';
+  document.getElementById('step-confirm').style.display = 'none';
+  renderAdminEditor();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function closeAdminTab() {
+  document.getElementById('admin-tab').style.display = 'none';
+  goStep(currentStep || 1);
+}
+
+function renderAdminEditor() {
+  const contacts = loadContacts();
+  const filledCount = RESOURCES.filter(r => {
+    const c = contacts[r.id]||{};
+    return c.poc||c.email||c.phone;
+  }).length;
+  const prog = document.getElementById('admin-progress');
+  if (prog) {
+    const pct = Math.round(filledCount/RESOURCES.length*100);
+    prog.innerHTML = `
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--ink);margin-bottom:.3rem">${filledCount} of ${RESOURCES.length} resources have contact info</div>
+        <div style="background:var(--border);border-radius:var(--pill);height:6px;overflow:hidden">
+          <div style="background:var(--teal);height:100%;width:${pct}%;border-radius:var(--pill);transition:width .3s"></div>
+        </div>
+      </div>
+      <div style="font-size:.72rem;color:var(--ink4)">${pct}% complete</div>`;
+  }
+  const wrap = document.getElementById('admin-editor-body');
+  if (!wrap) return;
+  wrap.innerHTML = RESOURCES.map(r => {
+    const c = { poc:'', phone:'', email:'', howto:'', ...(contacts[r.id] || {}) };
+    const hasContact = !!(c.poc || c.email || c.phone);
+    return `
+    <div class="admin-res-card" id="arc-${r.id}">
+      <div class="arc-header" onclick="toggleArc('${r.id}')">
+        <div style="display:flex;align-items:center;gap:.65rem;flex:1;min-width:0">
+          <div style="width:34px;height:34px;background:${r.iconBg};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">${r.icon}</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+            <div style="font-size:.73rem;color:${hasContact?'var(--green)':'var(--ink4)'}">
+              ${hasContact ? '✓ ' + (c.poc||c.email) : 'No contact info yet — click to add'}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+          <div class="arc-status ${hasContact?'filled':''}">\${hasContact?'Set':'Empty'}</div>
+          <div class="arc-chev" id="arc-chev-${r.id}">▼</div>
+        </div>
+      </div>
+      <div class="arc-body" id="arc-body-${r.id}" style="display:none">
+        <div class="arc-fields">
+          <div class="arc-field">
+            <label>Point of Contact Name</label>
+            <input id="acp-${r.id}" value="${esc(c.poc)}" placeholder="e.g. Maria Gonzalez, Literacy Specialist Lead">
+          </div>
+          <div class="arc-field">
+            <label>Phone</label>
+            <input id="acph-${r.id}" value="${esc(c.phone)}" placeholder="e.g. (510) 670-4590 ext. 1234">
+          </div>
+          <div class="arc-field">
+            <label>Email</label>
+            <input type="email" id="acem-${r.id}" value="${esc(c.email)}" placeholder="e.g. mgonzalez@acoe.org">
+          </div>
+          <div class="arc-field arc-field-full">
+            <label>Referral Process — how does a staff member access this resource?</label>
+            <textarea id="acht-${r.id}" placeholder="e.g. Contact your site principal and request a referral. Specialist availability is confirmed within 3 days. No separate form required.">${esc(c.howto)}</textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem;padding:0 1rem .85rem;justify-content:flex-end">
+          <button class="arc-clear" onclick="clearResource('${r.id}')">Clear</button>
+          <button class="arc-save" onclick="saveResource('${r.id}')">Save →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleArc(id) {
+  const body = document.getElementById('arc-body-' + id);
+  const chev = document.getElementById('arc-chev-' + id);
+  const isOpen = body.style.display !== 'none';
+  // Close all first
+  RESOURCES.forEach(r => {
+    const b = document.getElementById('arc-body-' + r.id);
+    const c = document.getElementById('arc-chev-' + r.id);
+    if (b) b.style.display = 'none';
+    if (c) c.style.transform = '';
+  });
+  // Open clicked if it was closed
+  if (!isOpen) {
+    body.style.display = 'block';
+    chev.style.transform = 'rotate(180deg)';
+  }
+}
+
+function saveResource(id) {
+  const contacts = loadContacts();
+  contacts[id] = {
+    poc:   (document.getElementById('acp-'+id)||{}).value||'',
+    phone: (document.getElementById('acph-'+id)||{}).value||'',
+    email: (document.getElementById('acem-'+id)||{}).value||'',
+    howto: (document.getElementById('acht-'+id)||{}).value||'',
+  };
+  saveContacts(contacts);
+  const r = RESOURCES.find(x => x.id===id);
+  if (r) Object.assign(r, contacts[id]);
+  renderAdminEditor();
+  // Re-open the card
+  const body = document.getElementById('arc-body-'+id);
+  const chev = document.getElementById('arc-chev-'+id);
+  if (body) { body.style.display='block'; }
+  if (chev) { chev.style.transform='rotate(180deg)'; }
+  toast('Saved: ' + (r?r.name:id));
+}
+
+function clearResource(id) {
+  if (!confirm('Clear all contact info for this resource?')) return;
+  const contacts = loadContacts();
+  contacts[id] = { poc:'', phone:'', email:'', howto:'' };
+  saveContacts(contacts);
+  const r = RESOURCES.find(x => x.id===id);
+  if (r) Object.assign(r, contacts[id]);
+  renderAdminEditor();
+  toast('Cleared: ' + (r?r.name:id));
+}
+
+function saveAllResources() {
+  RESOURCES.forEach(r => {
+    const pocEl  = document.getElementById('acp-'+r.id);
+    if (!pocEl) return; // card not rendered
+    const contacts = loadContacts();
+    contacts[r.id] = {
+      poc:   pocEl.value||'',
+      phone: (document.getElementById('acph-'+r.id)||{}).value||'',
+      email: (document.getElementById('acem-'+r.id)||{}).value||'',
+      howto: (document.getElementById('acht-'+r.id)||{}).value||'',
+    };
+    saveContacts(contacts);
+    Object.assign(r, contacts[r.id]);
+  });
+  renderAdminEditor();
+  toast('All contacts saved');
+}
+
+
+
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function toast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink2);color:white;padding:9px 20px;border-radius:var(--pill);font-size:.82rem;font-weight:600;font-family:var(--sans);box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .25s,opacity .25s;opacity:0;z-index:1000;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent = '✓ ' + msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(60px)';
+  }, 2800);
+}
+
+// ═══════════════════════════════════════════
+//  PATCH renderResults TO USE CONTACT CARD
+// ═══════════════════════════════════════════
+// Override the detail section to include the contact card
+const _origRenderResults = renderResults;
+function renderResults() {
+  const scored = RESOURCES.map(r => ({ ...r, score: scoreResource(r) }))
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  const list = document.getElementById('results-list');
+  const count = document.getElementById('results-count');
+  count.textContent = scored.length + ' match' + (scored.length !== 1 ? 'es' : '');
+
+  if (!scored.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">🔍</div><div style="font-size:.85rem">No resources matched your selections. Try adding more needs or describing the situation in your own words.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = scored.map(r => {
+    const tagsHtml = r.tags.map(t =>
+      `<span class="tag" style="background:${r.tagColors[t] ? r.tagColors[t]+'20' : '#eee'};color:${r.tagColors[t] || '#666'}">${t}</span>`
+    ).join('');
+    return `
+    <div class="res-card" id="rcard-${r.id}">
+      <div class="res-card-top" onclick="toggleDetail('${r.id}')">
+        <div class="res-icon" style="background:${r.iconBg}">${r.icon}</div>
+        <div class="res-info">
+          <div class="res-name">${r.name}</div>
+          <div class="res-tagline">${r.tagline}</div>
+          <div class="res-tags">${tagsHtml}</div>
+        </div>
+        <div class="res-match-score">
+          <div class="match-ring">${r.score}</div>
+          <div style="font-size:.65rem;color:var(--ink4);text-align:right">need${r.score!==1?'s':''}<br>matched</div>
+          <div class="expand-icon" id="ei-${r.id}">▼</div>
+        </div>
+      </div>
+      <div class="res-detail" id="det-${r.id}">
+        ${contactCardHtml(r)}
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">Typical Turnaround</div><div class="detail-value">${r.turnaround}</div></div>
+          <div class="detail-item"><div class="detail-label">Eligibility</div><div class="detail-value">${r.eligibility}</div></div>
+        </div>
+        <div class="detail-item" style="margin-bottom:.85rem;border:1px solid var(--border);border-radius:var(--r);padding:.65rem .8rem;background:white"><div class="detail-label">Staff Notes</div><div class="detail-value">${r.notes}</div></div>
+        <div class="action-btns">
+          <button class="btn-prim" onclick="toggleSelect('${r.id}',this)">${selectedResourceIds.has(r.id)?'✓ Selected':'+ Request this resource'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Copy GAS to clipboard ────────────────
+// ─── Copy resource IDs to clipboard ────────
+function copyIds() {
+  const ids = 'literacy-spec\nsylvan\npact\nsocial-workers\npsych\nbehaviorist\nsped\nptp\ninfant-fam\ncareer-cm\ned-liaison\nell-support\nadult-ed';
+  navigator.clipboard.writeText(ids).then(() => toast('Resource IDs copied — paste into column A of your Sheet'));
+}
+
+// ─── Init ─────────────────────────────────
+applyStoredContacts();     // paint from cache first (instant)
+buildChips();
+</script>
+    <div style="background:var(--bg);border-radius:var(--r);padding:1rem;margin-bottom:.75rem">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:.5rem">Step 2 — Share the Sheet (view only)</div>
+      <div style="font-size:.82rem;color:var(--ink2);line-height:1.75">
+        Click <strong>Share</strong> → <strong>Change to anyone with the link</strong> → make sure it says <strong>"Viewer"</strong> → click Done.<br>
+        <span style="color:var(--green);font-weight:600">That's it — no "Publish to web", no Apps Script, no authorization.</span>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:var(--r);padding:1rem;margin-bottom:.75rem">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:.5rem">Step 3 — Paste the URL below</div>
+      <div style="font-size:.82rem;color:var(--ink2);line-height:1.65;margin-bottom:.5rem">Copy the URL from your browser address bar while the sheet is open and paste it here.</div>
+      <div style="display:flex;gap:.4rem">
+        <input id="setup-url-inp" type="url" placeholder="https://docs.google.com/spreadsheets/d/…/edit" style="flex:1;border:1.5px solid var(--border2);border-radius:9px;padding:.5rem .85rem;font-family:var(--mono);font-size:.72rem;color:var(--ink);outline:none;transition:border-color .15s">
+        <button onclick="testSheetConnection()" class="modal-cancel" style="white-space:nowrap;flex-shrink:0">Test</button>
+      </div>
+      <div style="margin-top:.5rem;font-size:.75rem;color:var(--ink4)">The app reads your sheet using Google's own data API — no scripts or proxies needed.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeSetupModal()">Cancel</button>
+      <button class="modal-save" onclick="connectSheet()">Connect & Sync →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT CONTACT MODAL ── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <h3>Edit Point of Contact</h3>
+    <p class="modal-sub" id="modal-resource-name"></p>
+    <div class="modal-field">
+      <label>Point of Contact Name</label>
+      <input id="m-poc" placeholder="e.g. Maria Gonzalez, Ed Liaison Supervisor">
+    </div>
+    <div class="modal-field">
+      <label>Phone</label>
+      <input id="m-phone" placeholder="e.g. (510) 670-4590 ext. 1234">
+    </div>
+    <div class="modal-field">
+      <label>Email</label>
+      <input type="email" id="m-email" placeholder="e.g. mgonzalez@acoe.org">
+    </div>
+    <div class="modal-field">
+      <label>Referral Process / How to Access</label>
+      <textarea id="m-howto" placeholder="Describe exactly how a staff member initiates a referral — who to contact first, any forms to complete, what info to include…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveContact()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FLOATING SHORTCUT ── -->
+<button class="admin-btn" style="position:fixed;bottom:1.25rem;right:1.25rem;z-index:800" onclick="openAdminDirectory()">⚙ Manage Contacts</button>
+
+</body>
+</html>
